@@ -10,12 +10,11 @@ load_dotenv()
 META_TOKEN = os.getenv("META_TOKEN")
 PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
 FORM_ID = os.getenv("META_FORM_ID")
-VOICE_NOTE_URL = "https://drive.google.com/uc?export=download&id=1iJVE-hCQYEFdafrhj_L30zfTkoP2uDpr"
+VOICE_NOTE_URL = os.getenv("VOICE_NOTE_URL")
 
 QUIET_START = 20
 QUIET_END = 8
 DELAY_MINUTES = 20
-
 already_sent = set()
 
 def get_leads():
@@ -23,6 +22,7 @@ def get_leads():
     params = {"access_token": META_TOKEN}
     response = requests.get(url, params=params)
     data = response.json()
+    print(f"Meta API: {data}")
     leads = []
     if "data" in data:
         for lead in data["data"]:
@@ -32,6 +32,7 @@ def get_leads():
                     phone = field["values"][0]
             if phone:
                 leads.append({"id": lead["id"], "phone": phone})
+    print(f"Leads trouves: {len(leads)}")
     return leads
 
 def send_voice(phone_number):
@@ -44,7 +45,7 @@ def send_voice(phone_number):
         "audio": {"link": VOICE_NOTE_URL}
     }
     response = requests.post(url, headers=headers, json=data)
-    print(f"✅ Vocale envoyé à {phone_number}: {response.status_code}")
+    print(f"Vocale {phone_number}: {response.status_code} - {response.json()}")
 
 def should_wait(hour):
     return hour >= QUIET_START or hour < QUIET_END
@@ -55,20 +56,20 @@ def process_lead(phone, lead_id):
     already_sent.add(lead_id)
     hour = datetime.now().hour
     if should_wait(hour):
-        print(f"🌙 Heure tardive ({hour}h) → Vocale programmé à 9h matin pour {phone}")
+        print(f"Nuit ({hour}h) - 9h pour {phone}")
         schedule.every().day.at("09:00").do(lambda: send_voice(phone)).tag("pending")
     else:
-        print(f"☀️ Heure normale ({hour}h) → Vocale dans {DELAY_MINUTES} min pour {phone}")
+        print(f"Jour ({hour}h) - {DELAY_MINUTES}min pour {phone}")
         time.sleep(DELAY_MINUTES * 60)
         send_voice(phone)
 
 def check_new_leads():
-    print(f"🔍 Vérification des leads... {datetime.now().strftime('%H:%M:%S')}")
+    print(f"Check: {datetime.now().strftime('%H:%M:%S')}")
     leads = get_leads()
     for lead in leads:
         process_lead(lead["phone"], lead["id"])
 
-print("🚀 Agent Lead Meta Ads démarré !")
+print("Agent demarre!")
 schedule.every(5).minutes.do(check_new_leads)
 check_new_leads()
 
