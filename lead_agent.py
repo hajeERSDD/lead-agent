@@ -41,9 +41,25 @@ def send_voice(phone_number):
     data = {
         "messaging_product": "whatsapp",
         "to": phone_number,
-        "type": "audio",
-        "audio": {"link": VOICE_NOTE_URL}
+        "type": "template",
+        "template": {
+            "name": "creation_site",
+            "language": {"code": "fr"},
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [
+                        {
+                            "type": "text",
+                            "text": VOICE_NOTE_URL
+                        }
+                    ]
+                }
+            ]
+        }
     }
+    response = requests.post(url, headers=headers, json=data)
+    print(f"Message envoye a {phone_number}: {response.status_code} - {response.json()}")
     response = requests.post(url, headers=headers, json=data)
     print(f"Vocale {phone_number}: {response.status_code} - {response.json()}")
 
