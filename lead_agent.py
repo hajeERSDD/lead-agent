@@ -14,7 +14,7 @@ VOICE_NOTE_URL = os.getenv("VOICE_NOTE_URL")
 
 QUIET_START = 20
 QUIET_END = 8
-DELAY_MINUTES = 20
+DELAY_MINUTES = 1
 already_sent = set()
 
 def get_leads():
